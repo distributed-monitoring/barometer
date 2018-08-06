@@ -270,3 +270,13 @@ def test_csv_handles_plugin_data(
     logger.info('OK')
 
     return True
+
+
+def test_localagent_server_set_collectd(compute, logger, client):
+    res = client.set()
+    if res:
+        logger.info('set collectd PASS')
+    else:
+        logger.error('set collectd FAIL')
+
+    return res
