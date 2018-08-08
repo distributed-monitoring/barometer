@@ -242,46 +242,43 @@ class CSVClient(object):
 
 class LocalAgentClient(object):
     """Client to request LocalAgent"""
-    def __init__(self, host, port, user, passwd, file):
+    def __init__(self, host, port, user, passwd):
         """
         Keyword arguments:
         host -- Host URL
         port -- Host Port
         user -- Username
         passwd -- Password
-        file -- Config file name
         """
         self._host = host
         self._port = port
         self._user = user
         self._passwd = passwd
-        self._file = file
 
-    def set(self):
+    def set(self, file):
         logger.error('Do nothing to LocalAgent')
 
     def __str__(self):
-        return ('host: {0}, port: {1}, user: {2}, pass: {3}, file: {4}'
+        return ('host: {0}, port: {1}, user: {2}, pass: {3}'
                 .format(self._host, self._port,
-                        self._user, (self._passwd and '<Filterd>'),
-                        self._file))
+                        self._user, (self._passwd and '<Filterd>')))
 
 
 class RestLocalAgentClient(LocalAgentClient):
     """Client to request LocalAgent using REST"""
-    def __init__(self, host, port, user, passwd, file):
-        super(self.__class__, self).__init__(host, port, user, passwd, file)
+    def __init__(self, host, port, user, passwd):
+        super(self.__class__, self).__init__(host, port, user, passwd)
 
-    def set(self):
+    def set(self, file):
         logger.debug('Send to localagent using REST -- {}'.format(str(self)))
 
-        if not os.path.isfile(self._file):
-            print '{} is not found'.format(self._file)
+        if not os.path.isfile(file):
+            print '{} is not found'.format(file)
             return False
-        filename = os.path.basename(self._file)
+        filename = os.path.basename(file)
 
         url = 'http://{0}:{1}/collectd/conf'.format(self._host, self._port)
-        config = {'file': (filename, open(self._file, 'r'))}
+        config = {'file': (filename, open(file, 'r'))}
         requests.post(url, files=config)
 
         return True
@@ -289,18 +286,18 @@ class RestLocalAgentClient(LocalAgentClient):
 
 class PubLocalAgentClient(LocalAgentClient):
     """Client to request LocalAgent using AMQP Publish"""
-    def __init__(self, host, port, user, passwd, file):
-        super(self.__class__, self).__init__(host, port, user, passwd, file)
+    def __init__(self, host, port, user, passwd):
+        super(self.__class__, self).__init__(host, port, user, passwd)
 
-    def set(self):
+    def set(self, file):
         logger.debug('Send to localagent using AMQP Publish -- {}'
                      .format(str(self)))
 
-        if not os.path.isfile(self._file):
-            print '{} is not found'.format(self._file)
+        if not os.path.isfile(file):
+            print '{} is not found'.format(file)
             return False
-        filename = os.path.basename(self._file)
-        filebody = open(self._file, 'r').read()
+        filename = os.path.basename(file)
+        filebody = open(file, 'r').read()
         message = filename + '/' + filebody
 
         credentials = pika.PlainCredentials(self._user, self._passwd)
@@ -1023,15 +1020,15 @@ def main(bt_logger=None):
             amqp_user = agent_config.get('server').get('amqp_user')
             amqp_passwd = agent_config.get('server').get('amqp_password')
             rest_client = RestLocalAgentClient(
-                              listen_ip, listen_port, '', '', tmpfile)
+                              listen_ip, listen_port, '', '')
             pub_client = PubLocalAgentClient(
                              amqp_host, amqp_port, amqp_user,
-                             amqp_passwd, tmpfile)
+                             amqp_passwd)
 
             all_res = True
             for client in [rest_client, pub_client]:
                 tests.test_localagent_server_set_collectd(
-                    compute_node, logger, client)
+                    compute_node, tmpfile, logger, client)
                 sleep_time = 1
                 logger.info(
                     'Sleeping for {} seconds'.format(sleep_time)

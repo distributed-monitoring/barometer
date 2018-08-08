@@ -272,8 +272,10 @@ def test_csv_handles_plugin_data(
     return True
 
 
-def test_localagent_server_set_collectd(compute, logger, client):
-    res = client.set()
+def test_localagent_server_set_collectd(compute, file, logger, client):
+    with open(file, mode='w') as f:
+        f.write('# dummy conf\n')
+    res = client.set(file)
     if res:
         logger.info('set collectd PASS')
     else:
