@@ -619,6 +619,113 @@ file named custom.yaml
    $ sudo docker run -tid --net=host -v ${PWD}/custom.config:/opt/ves/config/ves_app_config.conf \
      -v ${PWD}/yaml/:/opt/ves/yaml/ opnfv/barometer-ves custom.yaml
 
+Build and Run LocalAgent and Redis Docker Images
+-----------------------------------------------------
+
+Download LocalAgent and Redis docker images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you wish to use pre-built barometer project's LocalAgent and Redis images, you can pull the
+images from https://hub.docker.com/r/opnfv/barometer-localagent/ and  https://hub.docker.com/r/opnfv/barometer-redis/
+
+.. note::
+   If your preference is to build images locally please see sections `Build LocalAgent Docker Image`_ and
+   `Build Redis Docker Rimage`_
+
+.. code:: bash
+
+    $ docker pull opnfv/barometer-localagent
+    $ docker pull opnfv/barometer-redis
+
+.. note::
+   If you have pulled the pre-built images there is no requirement to complete steps outlined
+   in sections `Build LocalAgent Docker Image`_ and `Build Redis Docker Image`_ and you can proceed directly to section
+   `Run LocalAgent Docker Image`_ If you wish to run the docker images via Docker Compose proceed directly to section `Docker Compose`_.
+
+Build Redis docker image
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Build Redis docker image:
+
+.. code:: bash
+
+    $ cd barometer/docker/barometer-redis
+    $ sudo docker build -t opnfv/barometer-redis --build-arg http_proxy=`echo $http_proxy` \
+      --build-arg https_proxy=`echo $https_proxy` -f Dockerfile .
+
+.. note::
+   In the above mentioned ``docker build`` command, http_proxy & https_proxy arguments needs
+   to be passed only if system is behind an HTTP or HTTPS proxy server.
+
+Check the docker images:
+
+.. code:: bash
+
+   $ sudo docker images
+
+Output should contain a barometer image:
+
+.. code::
+
+   REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
+   opnfv/barometer-redis       latest              05f2a3edd96b        3 hours ago         1.2GB
+
+Build LocalAgent docker image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Build LocalAgent docker image:
+
+.. code:: bash
+
+    $ cd barometer/docker/barometer-localagent
+    $ sudo docker build -t opnfv/barometer-localagent --build-arg http_proxy=`echo $http_proxy` \
+      --build-arg https_proxy=`echo $https_proxy` -f Dockerfile .
+
+.. note::
+   In the above mentioned ``docker build`` command, http_proxy & https_proxy arguments needs
+   to be passed only if system is behind an HTTP or HTTPS proxy server.
+
+Check the docker images:
+
+.. code:: bash
+
+   $ sudo docker images
+
+Output should contain a barometer image:
+
+.. code::
+
+   REPOSITORY                     TAG                 IMAGE ID            CREATED             SIZE
+   opnfv/barometer-localagent     latest              05f2a3edd96b        3 hours ago         1.2GB
+
+Run Redis docker image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+   Before running LocalAgent, Redis must be running.
+
+Run Redis docker image:
+
+.. code:: bash
+
+   $ sudo docker run -tid --net=host -p 6379:6379 redis:latest
+
+Check your docker image is running
+
+.. code:: bash
+
+   sudo docker ps
+
+Run LocalAgent docker image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+
+Run LocalAgent docker image with default configuration
+
+.. code:: bash
+
+   $ sudo docker run -tid --net=host opnfv/barometer-localagent
+
 Docker Compose
 --------------
 
