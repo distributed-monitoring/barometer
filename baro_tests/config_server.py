@@ -307,9 +307,10 @@ class ConfigServer(object):
         nodes = get_apex_nodes()
         for node in nodes:
             if compute_name == node.get_dict()['name']:
-                stdout = node.run_cmd(
-                    'systemctl status redis | grep "Active:"')
-                if stdout and 'active (running)' in stdout:
+                stdout = node.run_cmd('sudo systemctl status docker'
+                                      '&& sudo docker ps'
+                                      '| grep barometer-redis')
+                if stdout and 'barometer-redis' in stdout:
                     self.__logger.info(
                         'Redis is running in node {}'.format(
                          compute_name))
@@ -325,9 +326,10 @@ class ConfigServer(object):
         nodes = get_apex_nodes()
         for node in nodes:
             if compute_name == node.get_dict()['name']:
-                stdout = node.run_cmd(
-                    'pgrep -a server | grep "^[0-9]* server$"')
-                if stdout and 'server' in stdout:
+                stdout = node.run_cmd('sudo systemctl status docker'
+                                      '&& sudo docker ps'
+                                      '| grep opnfv/barometer-localagent')
+                if stdout and '/server' in stdout:
                     self.__logger.info(
                         'LocalAgent Server is running in node {}'.format(
                          compute_name))
@@ -343,8 +345,10 @@ class ConfigServer(object):
         nodes = get_apex_nodes()
         for node in nodes:
             if compute_name == node.get_dict()['name']:
-                stdout = node.run_cmd('pgrep -a infofetch')
-                if stdout and 'infofetch' in stdout:
+                stdout = node.run_cmd('sudo systemctl status docker'
+                                      '&& sudo docker ps'
+                                      '| grep opnfv/barometer-localagent')
+                if stdout and '/infofetch' in stdout:
                     self.__logger.info(
                         'LocalAgent InfoFetch is running in node {}'.format(
                          compute_name))
