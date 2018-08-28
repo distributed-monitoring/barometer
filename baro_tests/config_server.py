@@ -18,7 +18,7 @@ import time
 import os.path
 import os
 import re
-import toml
+import yaml
 
 from opnfv.deployment import factory
 import paramiko
@@ -360,16 +360,32 @@ class ConfigServer(object):
         nodes = get_apex_nodes()
         for node in nodes:
             if compute_name == node.get_dict()['name']:
-                stdout = node.run_cmd(
-                    'cat /etc/barometer-localagent/config.toml')
-                try:
-                    agent_conf = toml.loads(stdout)
-                except (TypeError, TomlDecodeError) as e:
-                    self.__logger.error(
-                        'LocalAgent config error: {}'.format(e))
-                    agent_conf = None
-                finally:
-                    return agent_conf
+                # We use following after functest accept python-toml
+                #     stdout = node.run_cmd(
+                #         'cat /etc/barometer-localagent/config.toml')
+                #     try:
+                #         agent_conf = toml.loads(stdout)
+                #     except (TypeError, TomlDecodeError) as e:
+                #         self.__logger.error(
+                #             'LocalAgent config error: {}'.format(e))
+                #         agent_conf = None
+                #     finally:
+                #         return agent_conf
+                readcmd = (
+                    'egrep "listen_port|amqp_"'
+                    ' /etc/barometer-localagent/config.toml'
+                    '| sed -e "s/#.*$//" | sed -e "s/=/:/"'
+                    )
+                stdout = node.run_cmd(readcmd)
+                agent_conf = {"server": yaml.load(stdout)}
+
+                pingcmd = (
+                    'ping -n -c1 ' + agent_conf["server"]["amqp_host"] +
+                    '| sed -ne "s/^.*bytes from //p" | sed -e "s/:.*//"'
+                    )
+                agent_conf["server"]["amqp_host"] = node.run_cmd(pingcmd)
+
+                return agent_conf
         return None
 
     def is_mcelog_installed(self, compute, package):
